@@ -1,0 +1,56 @@
+version: '3.8'
+
+networks:
+  app:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_kanban
+    environment:
+      POSTGRES_DB: ${APP_POSTGRES_DB}
+      POSTGRES_USER: ${APP_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${APP_POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - app
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_kanban
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - app
+
+  backend:
+    image: kanbanbn:1.0.0
+    container_name: kanbanapp
+    ports:
+      - "3000:3000"
+    environment:
+      - APP_JWT_SECRET=${APP_JWT_SECRET}
+      - APP_POSTGRES_HOST=postgres 
+      - APP_POSTGRES_PORT=5432
+      - APP_POSTGRES_DB=${APP_POSTGRES_DB}
+      - APP_POSTGRES_USER=${APP_POSTGRES_USER}
+      - APP_POSTGRES_PASSWORD=${APP_POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - app
+
+volumes:
+  postgres_data:
