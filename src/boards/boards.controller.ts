@@ -8,10 +8,15 @@ import {
   Put,
   UseGuards,
   Request,
+  Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { BoardsService } from './boards.service';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
+import { Board } from './entities/board.entity';
+// import { AuthGuard } from '@nestjs/passport';
+import { AuthGuard } from '../config/auth.guard'; // ตรวจสอบ path ให้ถูกต้อง
 
 
 
@@ -19,13 +24,19 @@ import { UpdateBoardDto } from './dto/update-board.dto';
 export class BoardsController {
   constructor(private readonly boardsService: BoardsService) {}
 
-  // สร้าง Board ใหม่
   @Post('add_board')
-  async create(@Body() createBoardDto: CreateBoardDto, @Request() req) {
-    const userId = req.user.id; // รับ ID ของ User จาก JWT token
+  @UseGuards(AuthGuard)
+  async create(
+    @Body() createBoardDto: CreateBoardDto,
+    @Request() req,
+  ): Promise<{ board: Board; userEmail: string }> {
+    const userId = req.user.id;
+    Logger.debug(`User ID from token: ${userId}`); // เพิ่มบรรทัดนี้
+    if (!userId) {
+      throw new UnauthorizedException('User ID is missing');
+    }
     return this.boardsService.create(createBoardDto, userId);
   }
-
   // ดึงข้อมูล Board ทั้งหมดของ User
   @Get()
   async findAllByUser(@Request() req) {

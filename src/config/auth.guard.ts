@@ -41,7 +41,11 @@ export class AuthGuard implements CanActivate {
     }
     try {
       const payload = this.jwtService.verify(token);
-      request['user'] = payload;
+      Logger.debug(`Token payload: ${JSON.stringify(payload)}`); // เพิ่มบรรทัดนี้
+      if (!payload.sub) {
+        throw new UnauthorizedException('Invalid token: missing sub field');
+      }
+      request['user'] = { id: payload.sub }; // ตั้งค่า req.user.id จาก payload.sub
     } catch (error) {
       throw new UnauthorizedException();
     }

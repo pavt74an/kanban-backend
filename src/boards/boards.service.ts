@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -24,10 +25,13 @@ export class BoardsService {
     createBoardDto: CreateBoardDto,
     userId: string,
   ): Promise<{ board: Board; userEmail: string }> {
+    Logger.debug(`Creating board for user ID: ${userId}`);
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
+      Logger.error(`User not found with ID: ${userId}`); // เพิ่มบรรทัดนี้
       throw new NotFoundException('User not found');
     }
+    Logger.debug(`User found: ${JSON.stringify(user)}`);
 
     if (!createBoardDto.board_name) {
       throw new BadRequestException('Board name is required');
@@ -73,7 +77,6 @@ export class BoardsService {
       userEmail: user.email,
     };
   }
-
   async findOne(
     id: string,
     userId: string,
@@ -98,7 +101,7 @@ export class BoardsService {
 
     // จัดรูปแบบ response
     return {
-      board: classToPlain(board), 
+      board: classToPlain(board),
       userEmail: user.email,
     };
   }
