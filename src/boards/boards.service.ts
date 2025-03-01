@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +9,7 @@ import { Board } from './entities/board.entity';
 import { User } from '../user/entities/user.entity';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
+import { classToPlain } from 'class-transformer';
 
 @Injectable()
 export class BoardsService {
@@ -50,7 +50,7 @@ export class BoardsService {
 
   async findAllByUser(
     userId: string,
-  ): Promise<{ boards: Board[]; userEmail: string }> {
+  ): Promise<{ boards: any; userEmail: string }> {
     // ดึงข้อมูล email ของ User
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -69,14 +69,15 @@ export class BoardsService {
 
     // จัดรูปแบบ response
     return {
-      boards: boards,
+      boards: classToPlain(boards), // แปลงข้อมูลก่อนส่งกลับ
       userEmail: user.email,
     };
   }
+
   async findOne(
     id: string,
     userId: string,
-  ): Promise<{ board: Board; userEmail: string }> {
+  ): Promise<{ board: any; userEmail: string }> {
     const board = await this.boardRepository.findOne({
       where: { board_id: id, user: { id: userId } },
       relations: ['columns', 'members'],
@@ -97,11 +98,10 @@ export class BoardsService {
 
     // จัดรูปแบบ response
     return {
-      board: board,
+      board: classToPlain(board), 
       userEmail: user.email,
     };
   }
-
   async update(
     id: string,
     updateBoardDto: UpdateBoardDto,

@@ -14,6 +14,7 @@ import { TagsModule } from './tags/tags.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuthModule } from './auth/auth.module';
 import { ColumnsModule } from './columns/columns.module';
+import { BoardMemberModule } from './board-member/board-member.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ColumnsModule } from './columns/columns.module';
     TagsModule,
     NotificationsModule,
     AuthModule,
+    BoardMemberModule,
   ],
   controllers: [HealthController],
   providers: [

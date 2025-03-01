@@ -1,8 +1,14 @@
-import { BoardMember } from 'src/boards/entities/board-member.entity';
+import { BoardMember } from 'src/board-member/entities/board-member.entity';
 import { Board } from 'src/boards/entities/board.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { Task } from 'src/tasks/entities/task.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class User {
@@ -21,13 +27,13 @@ export class User {
   @Column()
   password: string;
 
-  @OneToMany(() => Board, (board) => board.user, { cascade: true }) 
+  @OneToMany(() => Board, (board) => board.user, { cascade: true })
   boards: Board[];
 
   @OneToMany(() => BoardMember, (boardMember) => boardMember.user)
   boardMembers: BoardMember[];
 
-  @OneToMany(() => Task, (task) => task.assignedUser)
+  @ManyToMany(() => Task, (task) => task.assignees)
   tasks: Task[];
 
   @OneToMany(() => Notification, (notification) => notification.user)

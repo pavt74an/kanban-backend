@@ -1,1 +1,6 @@
-export class CreateNotificationDto {}
+export class CreateNotificationDto {
+
+    taskId: string; 
+    userId: string; 
+    message: string; 
+}

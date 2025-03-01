@@ -1,1 +1,7 @@
-export class CreateColumnDto {}
+
+
+export class CreateColumnDto {
+    columnName: string;
+    boardId: string;
+
+}

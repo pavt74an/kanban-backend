@@ -1,27 +1,35 @@
-// src/tasks/entities/task.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { Tag } from '../../tags/entities/tag.entity';
-import { User } from 'src/user/entities/user.entity';
 import { BoardColumn } from 'src/columns/entities/columns.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
+import { Tag } from 'src/tags/entities/tag.entity';
+import { User } from 'src/user/entities/user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 
 @Entity()
 export class Task {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  task_id: string;
 
-  @Column()
-  name: string;
+  @Column({ nullable: false })
+  task_name: string;
 
   @ManyToOne(() => BoardColumn, (column) => column.tasks)
+  @JoinColumn({ name: 'column_id' })
   column: BoardColumn;
 
-  @ManyToOne(() => User, (user) => user.tasks)
-  assignedUser: User;
+  @Column({ name: 'column_id' })
+  column_id: string;
 
-  @OneToMany(() => Tag, (tag) => tag.task)
-  tags: Tag[];
+  @ManyToMany(() => User, (user) => user.tasks)
+  @JoinTable({
+    name: 'task_assignees',
+    joinColumn: { name: 'task_id', referencedColumnName: 'task_id' },
+    inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
+  })
+  assignees: User[];
 
   @OneToMany(() => Notification, (notification) => notification.task)
   notifications: Notification[];
+
+  @OneToMany(() => Tag, (tag) => tag.task)
+  tags: Tag[];
 }
