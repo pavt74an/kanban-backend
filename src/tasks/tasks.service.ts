@@ -140,35 +140,33 @@ export class TasksService {
     };
   }
 
-  // ใน Service
-async moveTaskToColumn(taskId: string, columnId: string): Promise<Task> {
-  const task = await this.taskRepository.findOne({
-    where: { task_id: taskId },
-    relations: ['column'],  // ตรวจสอบให้แน่ใจว่าเราได้ข้อมูลคอลัมน์
-  });
-
-  if (!task) {
-    throw new NotFoundException('Task not found');
-  }
-
-  // อัปเดต column_id ให้กับ task
-  task.column_id = columnId;
-
-  // ดึงข้อมูลคอลัมน์ใหม่ที่สัมพันธ์กับ column_id
-  const column = await this.columnRepository.findOne({
-    where: { column_id: columnId }
-  });
-
-  if (!column) {
-    throw new NotFoundException('Column not found');
-  }
-
-  // กำหนดข้อมูลคอลัมน์ใหม่ให้กับ task
-  task.column = column;
-  await this.taskRepository.save(task);
+  async moveTaskToColumn(taskId: string, columnId: string): Promise<Task> {
+    const task = await this.taskRepository.findOne({
+      where: { task_id: taskId },
+      relations: ['column'],  // ตรวจสอบให้แน่ใจว่าเราได้ข้อมูลคอลัมน์
+    });
   
-  return task;
-}
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+  
+    // ดึงข้อมูลคอลัมน์ใหม่ที่สัมพันธ์กับ column_id
+    const column = await this.columnRepository.findOne({
+      where: { column_id: columnId }
+    });
+  
+    if (!column) {
+      throw new NotFoundException('Column not found');
+    }
+  
+    // อัปเดตความสัมพันธ์ของ task กับ column ใหม่
+    task.column = column;
+  
+    // บันทึกการเปลี่ยนแปลง
+    await this.taskRepository.save(task);
+    
+    return task;
+  }
 
 // เพิ่ม Tag ให้กับ Task
 async addTagToTask(taskId: string, tagName: string): Promise<Tag> {
