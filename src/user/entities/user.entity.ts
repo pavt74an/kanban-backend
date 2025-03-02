@@ -15,7 +15,7 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true }) // เพิ่ม Unique Constraint
+  @Column({ unique: true }) 
   email: string;
 
   @Column()

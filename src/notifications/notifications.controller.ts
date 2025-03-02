@@ -15,7 +15,7 @@ import { Notification } from './entities/notification.entity';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  // สร้าง Notification
+  // create Notification
   @Post()
   async createNotification(
     @Body('message') message: string,
@@ -25,7 +25,7 @@ export class NotificationsController {
     return this.notificationsService.createNotification(message, userId, taskId);
   }
 
-  // ทำเครื่องหมายว่า Notification ถูกอ่านแล้ว
+  // set read Notification
   @Put(':id/mark-as-read')
   async markAsRead(@Param('id') id: string): Promise<Notification> {
     const notification = await this.notificationsService.markAsRead(id);
@@ -34,14 +34,12 @@ export class NotificationsController {
     }
     return notification;
   }
-
-  // ลบ Notification
   @Delete(':id')
   async deleteNotification(@Param('id') id: string): Promise<void> {
     await this.notificationsService.deleteNotification(id);
   }
 
-  // ดึง Notification ทั้งหมดของ User
+  // get all  Notification of User
   @Get('user/:userId')
   async getNotificationsByUser(
     @Param('userId') userId: string,

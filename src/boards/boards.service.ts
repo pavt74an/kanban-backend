@@ -28,7 +28,7 @@ export class BoardsService {
     Logger.debug(`Creating board for user ID: ${userId}`);
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      Logger.error(`User not found with ID: ${userId}`); // เพิ่มบรรทัดนี้
+      Logger.error(`User not found with ID: ${userId}`); 
       throw new NotFoundException('User not found');
     }
     Logger.debug(`User found: ${JSON.stringify(user)}`);
@@ -45,7 +45,7 @@ export class BoardsService {
 
     const savedBoard = await this.boardRepository.save(board);
 
-    // Return ข้อมูล Board พร้อมกับ email ของ User
+    // Return  Board with email of User
     return {
       board: savedBoard,
       userEmail: user.email,
@@ -55,25 +55,25 @@ export class BoardsService {
   async findAllByUser(
     userId: string,
   ): Promise<{ boards: any; userEmail: string }> {
-    // ดึงข้อมูล email ของ User
+   
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      select: ['email'], // ดึงเฉพาะ email
+      select: ['email'], 
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // ดึงข้อมูล Board ที่เกี่ยวข้องกับ User
+    // get data  Board relate with User
     const boards = await this.boardRepository.find({
       where: { user_id: userId },
-      relations: ['columns', 'members'], // ดึงข้อมูล Columns และ Members พร้อมกัน
+      relations: ['columns', 'members'],
     });
 
     // จัดรูปแบบ response
     return {
-      boards: classToPlain(boards), // แปลงข้อมูลก่อนส่งกลับ
+      boards: classToPlain(boards), 
       userEmail: user.email,
     };
   }
@@ -92,14 +92,12 @@ export class BoardsService {
 
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      select: ['email'], // ดึงเฉพาะ email
+      select: ['email'], 
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    // จัดรูปแบบ response
     return {
       board: classToPlain(board),
       userEmail: user.email,
@@ -110,7 +108,7 @@ export class BoardsService {
     updateBoardDto: UpdateBoardDto,
     userId: string,
   ): Promise<{ board: Board; userEmail: string }> {
-    // ดึงข้อมูล Board ตาม ID และ user_id
+
     const board = await this.boardRepository.findOne({
       where: { board_id: id, user: { id: userId } },
     });
@@ -119,11 +117,10 @@ export class BoardsService {
       throw new NotFoundException('Board not found');
     }
 
-    // อัปเดตชื่อ Board
+    // update Board name
     board.board_name = updateBoardDto.board_name;
     const updatedBoard = await this.boardRepository.save(board);
 
-    // ดึงข้อมูล email ของ User
     const user = await this.userRepository.findOne({
       where: { id: userId },
       select: ['email'], // ดึงเฉพาะ email
@@ -133,7 +130,6 @@ export class BoardsService {
       throw new NotFoundException('User not found');
     }
 
-    // จัดรูปแบบ response
     return {
       board: updatedBoard,
       userEmail: user.email,
@@ -144,7 +140,7 @@ export class BoardsService {
     id: string,
     userId: string,
   ): Promise<{ status: string; message: string }> {
-    // ดึงข้อมูล Board ตาม ID และ user_id
+ 
     const board = await this.boardRepository.findOne({
       where: { board_id: id, user: { id: userId } },
     });
@@ -153,10 +149,8 @@ export class BoardsService {
       throw new NotFoundException('Board not found');
     }
 
-    // ลบ Board
     await this.boardRepository.remove(board);
 
-    // Return ข้อความเมื่อลบสำเร็จ
     return {
       status: 'success',
       message: 'Board deleted successfully',

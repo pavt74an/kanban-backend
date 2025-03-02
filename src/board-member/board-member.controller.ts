@@ -22,7 +22,7 @@ export class BoardMemberController {
     @Body('userId') userId: string,
     @Request() req,
   ) {
-    const currentUserId = req.user.id; // รับ ID ของ User ที่ส่งคำขอ
+    const currentUserId = req.user.id;
     const dto: CreateBoardMemberDto = {
       board_id: boardId,
       user_id: userId,
@@ -36,7 +36,7 @@ export class BoardMemberController {
     @Param('userId') userId: string,
     @Request() req,
   ) {
-    const currentUserId = req.user.id; // รับ ID ของ User ที่ส่งคำขอ
+    const currentUserId = req.user.id; 
     const dto: DeleteMemberDto = {
       board_id: boardId,
       user_id: userId,

@@ -13,8 +13,6 @@ export class UserService {
     
   ) {}
 
-
-  // สร้างผู้ใช้ใหม่
   async create(registerDto: RegisterDto): Promise<User> {
     const newUser = this.userRepository.create({
       email: registerDto.email,

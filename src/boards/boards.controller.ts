@@ -15,8 +15,7 @@ import { BoardsService } from './boards.service';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
 import { Board } from './entities/board.entity';
-// import { AuthGuard } from '@nestjs/passport';
-import { AuthGuard } from '../config/auth.guard'; // ตรวจสอบ path ให้ถูกต้อง
+import { AuthGuard } from '../config/auth.guard'; 
 
 
 
@@ -31,7 +30,7 @@ export class BoardsController {
     @Request() req,
   ): Promise<{ board: Board; userEmail: string }> {
     const userId = req.user.id;
-    Logger.debug(`User ID from token: ${userId}`); // เพิ่มบรรทัดนี้
+    Logger.debug(`User ID from token: ${userId}`); 
     if (!userId) {
       throw new UnauthorizedException('User ID is missing');
     }
@@ -47,7 +46,7 @@ export class BoardsController {
   // ดึงข้อมูล Board ตาม ID
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req) {
-    const userId = req.user.id; // รับ ID ของ User จาก JWT token
+    const userId = req.user.id;  // รrecieve user id from token
     return this.boardsService.findOne(id, userId);
   }
 
@@ -58,14 +57,14 @@ export class BoardsController {
     @Body() updateBoardDto: UpdateBoardDto,
     @Request() req,
   ) {
-    const userId = req.user.id; // รับ ID ของ User จาก JWT token
+    const userId = req.user.id; 
     return this.boardsService.update(id, updateBoardDto, userId);
   }
 
   // ลบ Board
   @Delete(':id')
   async delete(@Param('id') id: string, @Request() req) {
-    const userId = req.user.id; // รับ ID ของ User จาก JWT token
+    const userId = req.user.id;
     return this.boardsService.delete(id, userId);
   }
 }

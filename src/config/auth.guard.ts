@@ -45,7 +45,7 @@ export class AuthGuard implements CanActivate {
       if (!payload.sub) {
         throw new UnauthorizedException('Invalid token: missing sub field');
       }
-      request['user'] = { id: payload.sub }; // ตั้งค่า req.user.id จาก payload.sub
+      request['user'] = { id: payload.sub }; // set req.user.id from  payload.sub
     } catch (error) {
       throw new UnauthorizedException();
     }

@@ -29,7 +29,6 @@ export class TasksService {
     private readonly tagsService: TagsService,
   ) {}
 
-  // สร้าง Task
   async createTask(taskName: string, columnId: string): Promise<Task> {
     const column = await this.columnRepository.findOne({
       where: { column_id: columnId },
@@ -41,7 +40,7 @@ export class TasksService {
     const task = this.taskRepository.create({
       task_name: taskName,
       column,
-      assignees: [], // เริ่มต้นด้วย assignees ว่าง
+      assignees: [], 
     });
 
     return this.taskRepository.save(task);
@@ -50,7 +49,7 @@ export class TasksService {
   async assignUserToTask(taskId: string, userId: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
-      relations: ['assignees', 'column.board.members'], // ดึงข้อมูล assignees และ board ที่ task นั้นอยู่
+      relations: ['assignees', 'column.board.members'], // get assignees and  board task existing
     });
     if (!task) {
       throw new NotFoundException('Task not found');
@@ -63,7 +62,6 @@ export class TasksService {
       throw new NotFoundException('User not found');
     }
 
-    // ตรวจสอบว่าผู้ใช้เป็นสมาชิกของ board หรือไม่
     const isMember = task.column.board.members.some(
       (member) => member.user_id === userId,
     );
@@ -71,11 +69,9 @@ export class TasksService {
       throw new ForbiddenException('User is not a member of this board');
     }
 
-    // เพิ่ม user เข้าไปใน assignees
     task.assignees = [...task.assignees, user];
     await this.taskRepository.save(task);
 
-    // ส่ง Notification ไปยังผู้ใช้ที่ถูก assign
     await this.notificationsService.createNotification(
       `You have been assigned to task: ${task.task_name}`,
       userId,
@@ -84,7 +80,7 @@ export class TasksService {
 
     return task;
   }
-  // ลบผู้รับผิดชอบออกจาก Task
+ 
   async unassignUserFromTask(taskId: string, userId: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
@@ -94,12 +90,10 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    // ลบ user ออกจาก assignees
     task.assignees = task.assignees.filter((user) => user.id !== userId);
     return this.taskRepository.save(task);
   }
 
-  // ดึง Task ทั้งหมดใน Column
   async getAllTasks(columnId: string): Promise<Task[]> {
     const tasks = await this.taskRepository.find({
       where: { column: { column_id: columnId } },
@@ -111,7 +105,6 @@ export class TasksService {
     return tasks;
   }
 
-  // ดึง Task โดย ID
   async getTaskById(taskId: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
@@ -123,7 +116,6 @@ export class TasksService {
     return task;
   }
 
-  // delete task
   async deleteTask(
     taskId: string,
   ): Promise<{ status: string; message: string }> {
@@ -143,14 +135,14 @@ export class TasksService {
   async moveTaskToColumn(taskId: string, columnId: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
-      relations: ['column'], // ตรวจสอบให้แน่ใจว่าเราได้ข้อมูลคอลัมน์
+      relations: ['column'], 
     });
 
     if (!task) {
       throw new NotFoundException('Task not found');
     }
 
-    // ดึงข้อมูลคอลัมน์ใหม่ที่สัมพันธ์กับ column_id
+  
     const column = await this.columnRepository.findOne({
       where: { column_id: columnId },
     });
@@ -159,16 +151,13 @@ export class TasksService {
       throw new NotFoundException('Column not found');
     }
 
-    // อัปเดตความสัมพันธ์ของ task กับ column ใหม่
     task.column = column;
 
-    // บันทึกการเปลี่ยนแปลง
     await this.taskRepository.save(task);
 
     return task;
   }
 
-  // เพิ่ม Tag ให้กับ Task
   async addTagToTask(taskId: string, tagName: string): Promise<Tag> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
@@ -176,12 +165,9 @@ export class TasksService {
     if (!task) {
       throw new NotFoundException('Task not found');
     }
-
-    // สร้าง Tag ใหม่และเชื่อมกับ Task
     return this.tagsService.createTag(tagName, taskId);
   }
 
-  // ลบ Tag ออกจาก Task
   async removeTagFromTask(taskId: string, tagId: string): Promise<void> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
@@ -193,7 +179,6 @@ export class TasksService {
     await this.tagsService.deleteTag(tagId);
   }
 
-  // ดึง Tag ทั้งหมดของ Task
   async getTagsByTask(taskId: string): Promise<Tag[]> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
