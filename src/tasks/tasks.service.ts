@@ -25,7 +25,7 @@ export class TasksService {
     private readonly columnRepository: Repository<BoardColumn>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly notificationsService: NotificationsService, 
+    private readonly notificationsService: NotificationsService,
     private readonly tagsService: TagsService,
   ) {}
 
@@ -103,7 +103,7 @@ export class TasksService {
   async getAllTasks(columnId: string): Promise<Task[]> {
     const tasks = await this.taskRepository.find({
       where: { column: { column_id: columnId } },
-      relations: ['assignees'], 
+      relations: ['assignees'],
     });
     if (!tasks || tasks.length === 0) {
       throw new NotFoundException('No tasks found for this column');
@@ -115,7 +115,7 @@ export class TasksService {
   async getTaskById(taskId: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
-      relations: ['assignees'], 
+      relations: ['assignees'],
     });
     if (!task) {
       throw new NotFoundException('Task not found');
@@ -143,82 +143,81 @@ export class TasksService {
   async moveTaskToColumn(taskId: string, columnId: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
-      relations: ['column'],  // ตรวจสอบให้แน่ใจว่าเราได้ข้อมูลคอลัมน์
+      relations: ['column'], // ตรวจสอบให้แน่ใจว่าเราได้ข้อมูลคอลัมน์
     });
-  
+
     if (!task) {
       throw new NotFoundException('Task not found');
     }
-  
+
     // ดึงข้อมูลคอลัมน์ใหม่ที่สัมพันธ์กับ column_id
     const column = await this.columnRepository.findOne({
-      where: { column_id: columnId }
+      where: { column_id: columnId },
     });
-  
+
     if (!column) {
       throw new NotFoundException('Column not found');
     }
-  
+
     // อัปเดตความสัมพันธ์ของ task กับ column ใหม่
     task.column = column;
-  
+
     // บันทึกการเปลี่ยนแปลง
     await this.taskRepository.save(task);
-    
+
     return task;
   }
 
-// เพิ่ม Tag ให้กับ Task
-async addTagToTask(taskId: string, tagName: string): Promise<Tag> {
-  const task = await this.taskRepository.findOne({
-    where: { task_id: taskId },
-  });
-  if (!task) {
-    throw new NotFoundException('Task not found');
+  // เพิ่ม Tag ให้กับ Task
+  async addTagToTask(taskId: string, tagName: string): Promise<Tag> {
+    const task = await this.taskRepository.findOne({
+      where: { task_id: taskId },
+    });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // สร้าง Tag ใหม่และเชื่อมกับ Task
+    return this.tagsService.createTag(tagName, taskId);
   }
 
-  // สร้าง Tag ใหม่และเชื่อมกับ Task
-  return this.tagsService.createTag(tagName, taskId);
-}
+  // ลบ Tag ออกจาก Task
+  async removeTagFromTask(taskId: string, tagId: string): Promise<void> {
+    const task = await this.taskRepository.findOne({
+      where: { task_id: taskId },
+    });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
 
-// ลบ Tag ออกจาก Task
-async removeTagFromTask(taskId: string, tagId: string): Promise<void> {
-  const task = await this.taskRepository.findOne({
-    where: { task_id: taskId },
-  });
-  if (!task) {
-    throw new NotFoundException('Task not found');
+    await this.tagsService.deleteTag(tagId);
   }
 
-  await this.tagsService.deleteTag(tagId);
-}
+  // ดึง Tag ทั้งหมดของ Task
+  async getTagsByTask(taskId: string): Promise<Tag[]> {
+    const task = await this.taskRepository.findOne({
+      where: { task_id: taskId },
+    });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
 
-// ดึง Tag ทั้งหมดของ Task
-async getTagsByTask(taskId: string): Promise<Tag[]> {
-  const task = await this.taskRepository.findOne({
-    where: { task_id: taskId },
-  });
-  if (!task) {
-    throw new NotFoundException('Task not found');
+    return this.tagsService.getTagsByTask(taskId);
   }
+  async updateTask(taskId: string, taskName: string): Promise<Task | null> {
+    const task = await this.taskRepository.findOne({
+      where: { task_id: taskId },
+    });
 
-  return this.tagsService.getTagsByTask(taskId);
-}
-async updateTask(taskId: string, taskName: string): Promise<Task | null> {
-  const task = await this.taskRepository.findOne({
-    where: { task_id: taskId },
-  });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
 
-  if (!task) {
-    throw new NotFoundException('Task not found');
+    task.task_name = taskName;
+    try {
+      return await this.taskRepository.save(task);
+    } catch (error) {
+      throw new InternalServerErrorException('Error updating task');
+    }
   }
-
-  task.task_name = taskName;
-  try {
-    return await this.taskRepository.save(task); 
-  } catch (error) {
-    throw new InternalServerErrorException('Error updating task');
-  }
-}
-
 }

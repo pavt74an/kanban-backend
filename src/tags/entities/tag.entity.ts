@@ -16,4 +16,5 @@ export class Tag {
 
   @Column({ name: 'task_id' })
   taskId: string;
+  tag_id: string;
 }
