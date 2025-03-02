@@ -34,7 +34,6 @@ export class BoardsService {
     private readonly notificationRepository: Repository<Notification>,
     @InjectRepository(Tag)
     private readonly tagRepository: Repository<Tag>,
-
   ) {}
 
   async create(
@@ -44,7 +43,7 @@ export class BoardsService {
     Logger.debug(`Creating board for user ID: ${userId}`);
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      Logger.error(`User not found with ID: ${userId}`); 
+      Logger.error(`User not found with ID: ${userId}`);
       throw new NotFoundException('User not found');
     }
     Logger.debug(`User found: ${JSON.stringify(user)}`);
@@ -71,10 +70,9 @@ export class BoardsService {
   async findAllByUser(
     userId: string,
   ): Promise<{ boards: any; userEmail: string }> {
-   
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      select: ['email'], 
+      select: ['email'],
     });
 
     if (!user) {
@@ -87,12 +85,12 @@ export class BoardsService {
       relations: ['columns', 'members'],
     });
 
-    // จัดรูปแบบ response
     return {
-      boards: classToPlain(boards), 
+      boards: classToPlain(boards),
       userEmail: user.email,
     };
   }
+
   async findOne(
     id: string,
     userId: string,
@@ -108,7 +106,7 @@ export class BoardsService {
 
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      select: ['email'], 
+      select: ['email'],
     });
 
     if (!user) {
@@ -124,7 +122,6 @@ export class BoardsService {
     updateBoardDto: UpdateBoardDto,
     userId: string,
   ): Promise<{ board: Board; userEmail: string }> {
-
     const board = await this.boardRepository.findOne({
       where: { board_id: id, user: { id: userId } },
     });
@@ -139,7 +136,7 @@ export class BoardsService {
 
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      select: ['email'], // ดึงเฉพาะ email
+      select: ['email'],
     });
 
     if (!user) {
@@ -152,56 +149,59 @@ export class BoardsService {
     };
   }
 
+  async delete(
+    id: string,
+    userId: string,
+  ): Promise<{ status: string; message: string }> {
+    const board = await this.boardRepository.findOne({
+      where: { board_id: id, user: { id: userId } },
+      relations: [
+        'columns',
+        'columns.tasks',
+        'columns.tasks.notifications',
+        'columns.tasks.tags',
+        'members',
+      ],
+    });
 
-
-  
-async delete(id: string, userId: string): Promise<{ status: string; message: string }> {
-  const board = await this.boardRepository.findOne({
-    where: { board_id: id, user: { id: userId } },
-    relations: ['columns', 'columns.tasks', 'columns.tasks.notifications', 'columns.tasks.tags', 'members'],
-  });
-
-  if (!board) {
-    throw new NotFoundException('Board not found');
-  }
-
-  // delete all tags in tasks
-  const tasks = board.columns.flatMap(column => column.tasks);
-  if (tasks.length > 0) {
-    for (const task of tasks) {
-      // Remove tags associated with the task if any
-      if (task.tags && task.tags.length > 0) {
-        await this.tagRepository.remove(task.tags);
-      }
-      
-      // Remove notifications related to the task
-      if (task.notifications && task.notifications.length > 0) {
-        await this.notificationRepository.remove(task.notifications);
-      }
+    if (!board) {
+      throw new NotFoundException('Board not found');
     }
-    // Remove tasks after tags and notifications are deleted
-    await this.taskRepository.remove(tasks);
+
+    // delete all tags in tasks
+    const tasks = board.columns.flatMap((column) => column.tasks);
+    if (tasks.length > 0) {
+      for (const task of tasks) {
+        // Remove tags associated with the task if any
+        if (task.tags && task.tags.length > 0) {
+          await this.tagRepository.remove(task.tags);
+        }
+
+        // Remove notifications related to the task
+        if (task.notifications && task.notifications.length > 0) {
+          await this.notificationRepository.remove(task.notifications);
+        }
+      }
+      // Remove tasks after tags and notifications are deleted
+      await this.taskRepository.remove(tasks);
+    }
+
+    // Remove columns if any
+    if (board.columns.length > 0) {
+      await this.columnRepository.remove(board.columns);
+    }
+
+    // Remove board members if any
+    if (board.members.length > 0) {
+      await this.boardMemberRepository.remove(board.members);
+    }
+
+    // Finally, remove the board itself
+    await this.boardRepository.remove(board);
+
+    return {
+      status: 'success',
+      message: 'Board deleted successfully',
+    };
   }
-
-  // Remove columns if any
-  if (board.columns.length > 0) {
-    await this.columnRepository.remove(board.columns);
-  }
-
-  // Remove board members if any
-  if (board.members.length > 0) {
-    await this.boardMemberRepository.remove(board.members);
-  }
-
-  // Finally, remove the board itself
-  await this.boardRepository.remove(board);
-
-  return {
-    status: 'success',
-    message: 'Board deleted successfully',
-  };
-}
-
-  
-
 }

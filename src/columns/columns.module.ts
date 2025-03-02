@@ -6,10 +6,12 @@ import { BoardColumn } from './entities/columns.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Task } from 'src/tasks/entities/task.entity';
 import { TasksModule } from 'src/tasks/tasks.module';
+import { Tag } from 'src/tags/entities/tag.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([BoardColumn, Board,Task]),TasksModule
+    TypeOrmModule.forFeature([BoardColumn, Board,Task,Tag,Notification]),TasksModule
   ],
   controllers: [ColumnsController],
   providers: [ColumnsService],

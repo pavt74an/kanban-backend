@@ -6,6 +6,8 @@ import { Board } from '../boards/entities/board.entity';
 import { CreateColumnDto } from './dto/create-column.dto';
 import { UpdateColumnDto } from './dto/update-column.dto';
 import { Task } from 'src/tasks/entities/task.entity';
+import { Tag } from 'src/tags/entities/tag.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
 
 @Injectable()
 export class ColumnsService {
@@ -16,6 +18,10 @@ export class ColumnsService {
     private readonly boardRepository: Repository<Board>,
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Tag)
+    private readonly tagRepository: Repository<Tag>,
+    @InjectRepository(Notification)
+        private readonly notificationRepository: Repository<Notification>,
   ) {}
 
   async createColumn(dto: CreateColumnDto): Promise<BoardColumn> {
@@ -36,15 +42,29 @@ export class ColumnsService {
   async deleteColumn(columnId: string): Promise<{ status: string; message: string }> {
     const column = await this.columnRepository.findOne({
       where: { column_id: columnId },
-      relations: ['tasks'], // โหลด tasks ที่เกี่ยวข้อง
+      relations: ['tasks', 'tasks.notifications', 'tasks.tags'], // โหลด tasks, notifications, และ tags ที่เกี่ยวข้อง
     });
   
     if (!column) {
       throw new NotFoundException('Column not found');
     }
   
-    // ลบ tasks ที่เกี่ยวข้อง
-    await this.taskRepository.remove(column.tasks);
+    const tasks = column.tasks;
+    if (tasks.length > 0) {
+      for (const task of tasks) {
+        // ลบ notifications ที่เกี่ยวข้องกับ task
+        if (task.notifications && task.notifications.length > 0) {
+          await this.notificationRepository.remove(task.notifications);
+        }
+  
+        // ลบ tags ที่เกี่ยวข้องกับ task
+        if (task.tags && task.tags.length > 0) {
+          await this.tagRepository.remove(task.tags);
+        }
+      }
+      // ลบ tasks ที่เกี่ยวข้อง
+      await this.taskRepository.remove(tasks);
+    }
   
     // ลบ column
     await this.columnRepository.remove(column);
