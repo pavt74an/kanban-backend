@@ -61,13 +61,13 @@ export class BoardMemberService {
     const boardMember = await this.boardMemberRepository.findOne({
       where: { board_id: dto.board_id, user_id: dto.user_id },
     });
-
+  
     if (!boardMember) {
       throw new NotFoundException('Member not found in this board');
     }
-
+  
     await this.boardMemberRepository.remove(boardMember);
-
+  
     return { status: 'success', message: 'Member removed successfully' };
   }
 

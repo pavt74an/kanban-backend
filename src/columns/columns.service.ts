@@ -5,6 +5,7 @@ import { BoardColumn } from './entities/columns.entity';
 import { Board } from '../boards/entities/board.entity';
 import { CreateColumnDto } from './dto/create-column.dto';
 import { UpdateColumnDto } from './dto/update-column.dto';
+import { Task } from 'src/tasks/entities/task.entity';
 
 @Injectable()
 export class ColumnsService {
@@ -13,6 +14,8 @@ export class ColumnsService {
     private readonly columnRepository: Repository<BoardColumn>,
     @InjectRepository(Board)
     private readonly boardRepository: Repository<Board>,
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
   ) {}
 
   async createColumn(dto: CreateColumnDto): Promise<BoardColumn> {
@@ -33,11 +36,19 @@ export class ColumnsService {
   async deleteColumn(columnId: string): Promise<{ status: string; message: string }> {
     const column = await this.columnRepository.findOne({
       where: { column_id: columnId },
+      relations: ['tasks'], // โหลด tasks ที่เกี่ยวข้อง
     });
+  
     if (!column) {
       throw new NotFoundException('Column not found');
     }
+  
+    // ลบ tasks ที่เกี่ยวข้อง
+    await this.taskRepository.remove(column.tasks);
+  
+    // ลบ column
     await this.columnRepository.remove(column);
+  
     return { status: 'success', message: 'Column deleted successfully' };
   }
 

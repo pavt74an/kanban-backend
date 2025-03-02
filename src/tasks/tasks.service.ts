@@ -13,6 +13,7 @@ import { NotificationsService } from 'src/notifications/notifications.service';
 import { TagsService } from 'src/tags/tags.service';
 import { Tag } from 'src/tags/entities/tag.entity';
 import { BoardMember } from 'src/board-member/entities/board-member.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
 
 @Injectable()
 export class TasksService {
@@ -25,8 +26,13 @@ export class TasksService {
     private readonly columnRepository: Repository<BoardColumn>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Tag)
+    private readonly tagRepository: Repository<Tag>,
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
     private readonly notificationsService: NotificationsService,
     private readonly tagsService: TagsService,
+
   ) {}
 
   async createTask(taskName: string, columnId: string): Promise<Task> {
@@ -121,11 +127,19 @@ export class TasksService {
   ): Promise<{ status: string; message: string }> {
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
+      relations: ['notifications', 'tags'], // โหลด notifications และ tags ที่เกี่ยวข้อง
     });
+  
     if (!task) {
       throw new NotFoundException('Task not found');
     }
-    await this.taskRepository.delete(taskId);
+  
+    await this.notificationRepository.remove(task.notifications);
+  
+    await this.tagRepository.remove(task.tags);
+  
+    await this.taskRepository.remove(task);
+  
     return {
       status: 'success',
       message: 'Task deleted successfully',

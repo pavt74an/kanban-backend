@@ -20,10 +20,10 @@ export class Board {
   @Column({ name: 'user_id' }) 
   user_id: string;
 
-  @OneToMany(() => BoardColumn, (column) => column.board)
+  @OneToMany(() => BoardColumn, (column) => column.board, { cascade: true, onDelete: 'CASCADE'})
   columns: BoardColumn[];
 
-  @OneToMany(() => BoardMember, (member) => member.board)
+  @OneToMany(() => BoardMember, (member) => member.board, { cascade: true, onDelete: 'CASCADE', })
   @Transform(({ value }) => value.map(member => ({ id: member.id, user_id: member.user_id })))
   members: BoardMember[];
 }

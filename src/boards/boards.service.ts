@@ -11,6 +11,11 @@ import { User } from '../user/entities/user.entity';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
 import { classToPlain } from 'class-transformer';
+import { BoardMember } from 'src/board-member/entities/board-member.entity';
+import { BoardColumn } from 'src/columns/entities/columns.entity';
+import { Task } from 'src/tasks/entities/task.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
+import { Tag } from 'src/tags/entities/tag.entity';
 
 @Injectable()
 export class BoardsService {
@@ -19,6 +24,17 @@ export class BoardsService {
     private readonly boardRepository: Repository<Board>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(BoardMember)
+    private readonly boardMemberRepository: Repository<BoardMember>,
+    @InjectRepository(BoardColumn)
+    private readonly columnRepository: Repository<BoardColumn>,
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(Tag)
+    private readonly tagRepository: Repository<Tag>,
+
   ) {}
 
   async create(
@@ -136,24 +152,56 @@ export class BoardsService {
     };
   }
 
-  async delete(
-    id: string,
-    userId: string,
-  ): Promise<{ status: string; message: string }> {
- 
-    const board = await this.boardRepository.findOne({
-      where: { board_id: id, user: { id: userId } },
-    });
 
-    if (!board) {
-      throw new NotFoundException('Board not found');
-    }
 
-    await this.boardRepository.remove(board);
+  
+async delete(id: string, userId: string): Promise<{ status: string; message: string }> {
+  const board = await this.boardRepository.findOne({
+    where: { board_id: id, user: { id: userId } },
+    relations: ['columns', 'columns.tasks', 'columns.tasks.notifications', 'columns.tasks.tags', 'members'],
+  });
 
-    return {
-      status: 'success',
-      message: 'Board deleted successfully',
-    };
+  if (!board) {
+    throw new NotFoundException('Board not found');
   }
+
+  // delete all tags in tasks
+  const tasks = board.columns.flatMap(column => column.tasks);
+  if (tasks.length > 0) {
+    for (const task of tasks) {
+      // Remove tags associated with the task if any
+      if (task.tags && task.tags.length > 0) {
+        await this.tagRepository.remove(task.tags);
+      }
+      
+      // Remove notifications related to the task
+      if (task.notifications && task.notifications.length > 0) {
+        await this.notificationRepository.remove(task.notifications);
+      }
+    }
+    // Remove tasks after tags and notifications are deleted
+    await this.taskRepository.remove(tasks);
+  }
+
+  // Remove columns if any
+  if (board.columns.length > 0) {
+    await this.columnRepository.remove(board.columns);
+  }
+
+  // Remove board members if any
+  if (board.members.length > 0) {
+    await this.boardMemberRepository.remove(board.members);
+  }
+
+  // Finally, remove the board itself
+  await this.boardRepository.remove(board);
+
+  return {
+    status: 'success',
+    message: 'Board deleted successfully',
+  };
+}
+
+  
+
 }

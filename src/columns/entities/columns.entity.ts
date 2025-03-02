@@ -18,6 +18,6 @@ export class BoardColumn {
   @Column({ name: 'board_id' })
   board_id: string;
 
-  @OneToMany(() => Task, (task) => task.column)
+  @OneToMany(() => Task, (task) => task.column, { cascade: true, onDelete: 'CASCADE'})
   tasks: Task[];
 }

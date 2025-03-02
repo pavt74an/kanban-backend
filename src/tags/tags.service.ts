@@ -24,7 +24,13 @@ export class TagsService {
   }
 
   async deleteTag(id: string): Promise<void> {
-    await this.tagRepository.delete(id);
+    const tag = await this.tagRepository.findOne({ where: { id } });
+  
+    if (!tag) {
+      throw new NotFoundException('Tag not found');
+    }
+  
+    await this.tagRepository.remove(tag);
   }
 
   async updateTagName(id: string, name: string): Promise<Tag> {

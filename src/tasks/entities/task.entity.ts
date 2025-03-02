@@ -2,7 +2,16 @@ import { BoardColumn } from 'src/columns/entities/columns.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { Tag } from 'src/tags/entities/tag.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 
 @Entity()
 export class Task {
@@ -27,9 +36,15 @@ export class Task {
   })
   assignees: User[];
 
-  @OneToMany(() => Notification, (notification) => notification.task)
+  @OneToMany(() => Notification, (notification) => notification.task, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   notifications: Notification[];
 
-  @OneToMany(() => Tag, (tag) => tag.task)
+  @OneToMany(() => Tag, (tag) => tag.task, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   tags: Tag[];
 }
